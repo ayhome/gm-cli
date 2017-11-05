@@ -56,7 +56,7 @@ class Command {
 
   }
 
-  public function start($cls,$ac)
+  public function start($cls = '',$ac = '')
   {
     if (!$this->name) {
       exit("请指定进程名称，参数 -n 或 --name".PHP_EOL);
@@ -110,7 +110,7 @@ class Command {
       return;
     }
 
-    if ($this->tick) {
+    if ($this->tick && $ac  && $cls) {
       $crontab = new Ticker();
       $crontab->When($this->tick)
       ->Then(function () use($cls,$ac){
@@ -118,8 +118,12 @@ class Command {
         $cls->$ac();
       });
     }else{
-      $cls->$ac();
+      if ($ac  && $cls) {
+        $cls->$ac();
+      }
     }
+
+    return true;
   }
 
   public function getCmd($cmd='cmd')
@@ -142,13 +146,36 @@ class Command {
     }
     echo "USER PID RSS(kb) STAT START COMMAND" . PHP_EOL;
     foreach ($out as $v) {
-        echo "\033[31m".$v ."\033[0m". PHP_EOL;
+      echo "\033[31m".$v ."\033[0m". PHP_EOL;
     }
+    exit();
   }
 
-  public function kill($value='')
+  function stop()
   {
-    # code...
+    if (!file_exists($this->pidFile)) {
+      $txt = "{$this->pidFile}不存在";
+      exit(Colors::error($txt));
+    }
+    $pid = explode("\n", file_get_contents($this->pidFile));
+    
+    $cmd = "kill {$pid[0]}";
+    exec($cmd);
+    do {
+        $out = [];
+        $c = "ps ax | awk '{ print $1 }' | grep -e \"^{$pid[0]}$\"";
+        exec($c, $out);
+        if (empty($out)) {
+          break;
+        }
+    } while (true);
+    //确保停止服务后pid文件被删除
+    if (file_exists($this->pidFile)) {
+      unlink($this->pidFile);
+    }
+    $txt = "进程结束成功";
+    exit(Colors::note($txt));
+    
   }
 
 }
