@@ -1,0 +1,20 @@
+{
+    "name": "ayhome/gm-cli",
+    "description": "gm-cli for php",
+    "type": "library",
+    "license": "Apache-2.0",
+    "authors": [
+        {
+            "name": "ayhome",
+            "email": "ayhome@foxmail.com"
+        }
+    ],
+    "require": {
+        "php": ">=5.6.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "ayhome\\gm-cli\\": "src"
+        }
+    }
+}
