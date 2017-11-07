@@ -19,7 +19,7 @@ class Command {
   public $pidFile = '';
   //PID号
   public $ppid = 0;
-  public $daemon = -1;
+  public $daemon = 1;
   public function __construct($cfg = array())
   {
     $shortopts = "d:h:p:n:t:";
@@ -52,8 +52,12 @@ class Command {
     if ($cmds['cmd']) $this->cmd = $cmds['cmd'];
     if ($cfg['cmd']) $this->cmd = $cfg['cmd'];
 
-    
 
+  }
+
+  private function init()
+  {
+    # code...
   }
 
   public function start($cls = '',$ac = '')
@@ -104,9 +108,16 @@ class Command {
       $txt = "{$this->fullName} pid文件生成失败({$this->pidFile}) ,请手动关闭当前启动的{$this->fullName}";
       exit(Colors::note($txt));
     }
-
     if ($this->cmd == 'status') {
       $this->status();
+      exit();
+      return;
+    }elseif ($this->cmd == 'stop') {
+      $this->stop();
+      return;
+    }elseif ($this->cmd == 'restart') {
+      $this->stop();
+    }else{
       return;
     }
 
@@ -138,7 +149,7 @@ class Command {
 
   public function status($value='')
   {
-    $cmd = "ps aux|grep {$this->fullName} |grep -v grep|awk '{print $1, $2, $6, $8, $9, $11}'";
+    $cmd = "ps aux|grep {$this->fullName} | grep -v grep |awk '{print $1, $2, $6, $8, $9, $11}'";
     exec($cmd, $out);
     if (empty($out)) {
       $txt = "没有发现正在运行的{$this->fullName}服务";
@@ -151,6 +162,7 @@ class Command {
     exit();
   }
 
+
   function stop()
   {
     if (!file_exists($this->pidFile)) {
@@ -160,7 +172,7 @@ class Command {
     $pid = explode("\n", file_get_contents($this->pidFile));
     
     $cmd = "kill {$pid[0]}";
-    exec($cmd);
+    exec($cmd,$rets);
     do {
         $out = [];
         $c = "ps ax | awk '{ print $1 }' | grep -e \"^{$pid[0]}$\"";
